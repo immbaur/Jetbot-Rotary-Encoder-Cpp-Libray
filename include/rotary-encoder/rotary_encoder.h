@@ -1,4 +1,5 @@
 
+#include <atomic>
 #include <deque>
 #include <iostream>
 #include <mutex>
@@ -11,8 +12,15 @@ public:
    *
    * @param gpio GPIO pin where the encoder is connected.
    * @param rotationPulsea Number of encoder pulses per rotation.
+   * @param maxPulseTime Timeout before setting rotary to zero in microseconds.
    */
-  RotaryEncoder(int gpio, int rotationPulses);
+  RotaryEncoder(int gpio, int rotationPulses, int maxPulseTime);
+
+  /**
+   * Destructor for save exit.
+   *
+   */
+  ~RotaryEncoder();
 
   /**
    * API to read RPM.
@@ -34,8 +42,10 @@ private:
   const int _gpio;
   const int _rotationPulses;
   const int _buffSize;
+  const int _maxPulseTime;
 
-  std::thread polling_thread;
+  std::atomic<bool> _terminate_thread;
+  std::thread _polling_thread;
   std::deque<std::chrono::steady_clock::time_point> _buffer;
   std::mutex _bufferMutex;
 };
